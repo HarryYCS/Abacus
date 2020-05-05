@@ -9,6 +9,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
+  secondContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   form:{
     justifyContent: 'center',
     alignItems: 'center',
@@ -17,7 +21,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     backgroundColor: colours.ColourThree,
     justifyContent: 'center',
-    height: '15%',
+    height: 50,
     width: '80%',
   },
   inputTextLabel: {
