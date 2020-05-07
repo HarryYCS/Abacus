@@ -22,6 +22,7 @@ export default class LearnScreen extends React.Component {
            currentQuestionOptionA: '',
            currentQuestionOptionB: '',
            currentQuestionOptionC: '',
+           currentCardId: '',
         }
      }
 
@@ -35,7 +36,7 @@ export default class LearnScreen extends React.Component {
         });
       });
     return subjectsId;
-    };
+  };
 
     async getSubject(subjectsId) {
       var user = firebase.auth().currentUser
@@ -52,10 +53,10 @@ export default class LearnScreen extends React.Component {
           }
         });
       });
-      return currentSubjectId;
-    };
+    return currentSubjectId;
+  };
 
-    async getCards(subId) {
+  async getCards(subId) {
       var cardIds = [];
       var currentId = subId
       await db.collection('cards').get().then(snapshot => {
@@ -68,7 +69,7 @@ export default class LearnScreen extends React.Component {
           });
         });
       return cardIds;
-      };
+  };
 
       async getRandomCard(cardsIds) {
         var arrayLen = cardsIds.length
@@ -79,13 +80,15 @@ export default class LearnScreen extends React.Component {
           snapshot.forEach(doc => {
             if(doc.id == randomCard){
               currentCard = (doc.data());
+              this.currentCardId = randomCard;
+              console.log(this.currentCardId)
               console.log(currentCard)
               console.log(doc.data().Name)
             }
           })
         })
                       return currentCard;
-      }
+    };
 
 async  getQuestion(level) {
     var currentCard
@@ -106,8 +109,81 @@ async updateQuestion() {
   console.log(currentCard)
   this.setState({currentQuestionContent: currentCard.Content, currentQuestionOptionA: currentCard.OptionA, currentQuestionOptionB: currentCard.OptionB, currentQuestionOptionC: currentCard.OptionC })
   return;
-}
+};
 
+  async optionSelected(option) {
+    this.setState({currentQuestionContent: 'Tap for new question'})
+    let currentCard = await this.getRandomCard(this.currentCardId);
+    var user = firebase.auth().currentUser
+    console.log(user.uid)
+    var uid = user.uid
+    console.log('test 12')
+    console.log(uid)
+    let newPercentage = 0;
+    let subjectId = currentCard.SubjectId.toString();
+    if (currentCard.CorrectChoice == option){
+      console.log('test 1');
+      db.collection("learner").doc(uid).collection("learningPercentage").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          console.log(doc.id)
+          if (doc.id == subjectId) {
+            console.log(doc.data().percentage)
+            newPercentage = doc.data().percentage
+            if( newPercentage < 25 ){
+              newPercentage = newPercentage + 15
+            } else if ( newPercentage < 50 ) {
+              newPercentage = newPercentage + 10
+            } else if ( newPercentage < 75 ) {
+              newPercentage = newPercentage + 5
+            } else if ( newPercentage < 90 ){
+              newPercentage = newPercentage + 3
+            } else {
+              newPercentage = newPercentage + 1
+            }
+          }
+        })
+      });
+      console.log(newPercentage)
+      db.collection("learner").get().then(function(){
+          db.collection("learner").doc(uid).collection("learningPercentage").doc(subjectId).set({
+            percentage: newPercentage,
+          });
+        }
+      );
+      alert('Well Done');
+    } else {
+      console.log('test 1');
+      db.collection("learner").doc(uid).collection("learningPercentage").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          console.log(doc.id)
+          if (doc.id == subjectId) {
+            console.log(doc.data().percentage)
+            newPercentage = doc.data().percentage
+            if( newPercentage > 80 ){
+              newPercentage = newPercentage - 15
+            } else if ( newPercentage > 50 ) {
+              newPercentage = newPercentage - 10
+            } else if ( newPercentage > 20 ) {
+              newPercentage = newPercentage - 5
+            } else if ( newPercentage > 0 ){
+              newPercentage = newPercentage - 1
+            } else {
+              newPercentage = newPercentage
+            }
+          }
+        })
+      });
+      console.log(newPercentage)
+      db.collection("learner").get().then(function(){
+          db.collection("learner").doc(uid).collection("learningPercentage").doc(subjectId).set({
+            percentage: newPercentage,
+          });
+        }
+      );
+      alert('Unlucky, better luck next time');
+    }
+    return;
+  };
 
 
 
@@ -122,35 +198,28 @@ async updateQuestion() {
     }else{
     return (
     <Container style={styles.mainContainer}>
-        <Button style={{ marginTop: 10}}
-          full
-          rounded
-          success
+      <Container style={styles.secondContainer}>
+        <Button style={styles.genericButton}
           onPress = { () => this.updateQuestion() }
         >
-          <Text style={{ color: 'white' } }>{this.state.currentQuestionContent}</Text>
+          <Text style={styles.genericButtonText}>{this.state.currentQuestionContent}</Text>
         </Button>
-        <Button style={{ marginTop: 10}}
-          full
-          rounded
-          success
+        <Button style={styles.genericButton}
+        onPress = { () => this.optionSelected('A') }
         >
-          <Text style={{ color: 'white' } }>{this.state.currentQuestionOptionA}</Text>
+          <Text style={styles.genericButtonText}>{this.state.currentQuestionOptionA}</Text>
         </Button>
-        <Button style={{ marginTop: 10}}
-          full
-          rounded
-          success
+        <Button style={styles.genericButton}
+        onPress = { () => this.optionSelected('B') }
         >
-          <Text style={{ color: 'white' } }>{this.state.currentQuestionOptionB}</Text>
+          <Text style={styles.genericButtonText}>{this.state.currentQuestionOptionB}</Text>
         </Button>
-        <Button style={{ marginTop: 10}}
-          full
-          rounded
-          success
+        <Button style={styles.genericButton}
+        onPress = { () => this.optionSelected('C') }
         >
-          <Text style={{ color: 'white' } }>{this.state.currentQuestionOptionC}</Text>
+          <Text style={styles.genericButtonText}>{this.state.currentQuestionOptionC}</Text>
         </Button>
+      </Container>
     </Container>
   );
 }
